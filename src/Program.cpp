@@ -1,6 +1,9 @@
 #include "Types.hpp"
 
+#include "Program_Error.hpp"
+
 #include "InlineMethods.hpp"
+
 
 PyObject * MGLContext_program(MGLContext * self, PyObject * args) {
 	PyObject * shaders[5];
@@ -86,17 +89,28 @@ PyObject * MGLContext_program(MGLContext * self, PyObject * args) {
 			const char * title = SHADER_NAME[i];
 			const char * underline = SHADER_NAME_UNDERLINE[i];
 
-			int log_len = 0;
-			gl.GetShaderiv(shader_obj, GL_INFO_LOG_LENGTH, &log_len);
+            // Format errors
+            std::string errors;
+            program_print_errors(errors, gl, shader_obj);
 
-			char * log = new char[log_len];
-			gl.GetShaderInfoLog(shader_obj, log_len, &log_len, log);
+            if (errors.size() > 0) {
+                // send formatted shader informations logs
+                MGLError_Set("%s\n\n%s\n%s\n%s\n", message, title, underline, errors.c_str());
+            }
+            else {
+                // old path
+                const char* log_parser_error = "Can't format shader informations logs (build errors)!";
+                // get raw shader info log
+                int log_len = 0;
+                gl.GetShaderiv(shader_obj, GL_INFO_LOG_LENGTH, &log_len);
+                char * log = new char[log_len];
+                gl.GetShaderInfoLog(shader_obj, log_len, &log_len, log);
+                // send raw shader informations logs
+                MGLError_Set("%s\n\n%s\n%s\n%s\n%s\n", message, title, underline, log_parser_error, log);
+            }
 
 			gl.DeleteShader(shader_obj);
 
-			MGLError_Set("%s\n\n%s\n%s\n%s\n", message, title, underline, log);
-
-			delete[] log;
 			return 0;
 		}
 
