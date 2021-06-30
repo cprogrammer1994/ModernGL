@@ -1546,7 +1546,10 @@ class Context:
             Returns:
                 :py:class:`ComputeShader` object
         '''
-
+        
+        if self.version_code < 430:
+          raise ValueError("OpenGL version 430+ needed, found {}".format(self.version_code))
+  
         res = ComputeShader.__new__(ComputeShader)
         res.mglo, ls1, ls2, ls3, ls4, res._glo = self.mglo.compute_shader(source)
 
