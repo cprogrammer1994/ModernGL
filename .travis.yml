@@ -36,6 +36,12 @@ jobs:
     language: shell
     name: Test on MacOS
     
+  - os: linux
+    arch: arm64
+    language: python
+    python: 3.8
+    name: Test on Linux for aarch64
+
   - stage: deploy
     services: docker
     install: python3 -m pip install twine cibuildwheel
@@ -65,6 +71,17 @@ jobs:
     after_success: |
       if [[ $TRAVIS_TAG ]]; then python3 -m pip install twine; python3 -m twine upload --skip-existing wheelhouse/*.whl; fi
 
+  - stage: deploy
+    os: linux
+    arch: arm64
+    language: python
+    python: 3.8
+    install: python3 -m pip install twine cibuildwheel
+    script:
+    - python3 -m cibuildwheel --output-dir ./wheelhouse
+    - ls wheelhouse
+    after_success: |
+      if [[ $TRAVIS_TAG ]]; then python3 -m pip install twine; python3 -m twine upload --skip-existing wheelhouse/*.whl; fi
 
 deploy:
   provider: releases
@@ -83,4 +100,5 @@ env:
   - CIBW_BUILD=cp3?-*
   - CIBW_MANYLINUX_X86_64_IMAGE=manylinux1
   - CIBW_MANYLINUX_I686_IMAGE=manylinux1
+  - CIBW_MANYLINUX_AARCH64_IMAGE=manylinux2014
   - TWINE_USERNAME=__token__
